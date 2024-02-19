@@ -6,6 +6,7 @@ option go_package = "github.com/hencsat46/protos-streaming;store";
 
 service Store {
     rpc GetProducts(OrderRequest) returns (stream Order);
+    rpc UpdateProducts(stream UpdateRequest) returns (UpdateStatus);
 }
 
 message Order {
@@ -14,3 +15,12 @@ message Order {
 }
 
 message OrderRequest {}
+
+message UpdateRequest {
+    string name = 1;
+    int32 count = 2;
+}
+
+message UpdateStatus {
+    string status = 1;
+}
