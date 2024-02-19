@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package store;
+
+option go_package = "github.com/hencsat46/protos-streaming;store";
+
+service Store {
+    rpc GetProducts(OrderRequest) returns (stream Order);
+}
+
+message Order {
+    string name = 1;
+    int32 count = 2;
+}
+
+message OrderRequest {}
