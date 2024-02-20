@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type StoreClient interface {
 	GetProducts(ctx context.Context, in *OrderRequest, opts ...grpc.CallOption) (Store_GetProductsClient, error)
 	UpdateProducts(ctx context.Context, opts ...grpc.CallOption) (Store_UpdateProductsClient, error)
+	ThrowProducts(ctx context.Context, opts ...grpc.CallOption) (Store_ThrowProductsClient, error)
 }
 
 type storeClient struct {
@@ -100,12 +101,44 @@ func (x *storeUpdateProductsClient) CloseAndRecv() (*UpdateStatus, error) {
 	return m, nil
 }
 
+func (c *storeClient) ThrowProducts(ctx context.Context, opts ...grpc.CallOption) (Store_ThrowProductsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Store_ServiceDesc.Streams[2], "/store.Store/ThrowProducts", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &storeThrowProductsClient{stream}
+	return x, nil
+}
+
+type Store_ThrowProductsClient interface {
+	Send(*UpdateRequest) error
+	Recv() (*Order, error)
+	grpc.ClientStream
+}
+
+type storeThrowProductsClient struct {
+	grpc.ClientStream
+}
+
+func (x *storeThrowProductsClient) Send(m *UpdateRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *storeThrowProductsClient) Recv() (*Order, error) {
+	m := new(Order)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // StoreServer is the server API for Store service.
 // All implementations must embed UnimplementedStoreServer
 // for forward compatibility
 type StoreServer interface {
 	GetProducts(*OrderRequest, Store_GetProductsServer) error
 	UpdateProducts(Store_UpdateProductsServer) error
+	ThrowProducts(Store_ThrowProductsServer) error
 	mustEmbedUnimplementedStoreServer()
 }
 
@@ -118,6 +151,9 @@ func (UnimplementedStoreServer) GetProducts(*OrderRequest, Store_GetProductsServ
 }
 func (UnimplementedStoreServer) UpdateProducts(Store_UpdateProductsServer) error {
 	return status.Errorf(codes.Unimplemented, "method UpdateProducts not implemented")
+}
+func (UnimplementedStoreServer) ThrowProducts(Store_ThrowProductsServer) error {
+	return status.Errorf(codes.Unimplemented, "method ThrowProducts not implemented")
 }
 func (UnimplementedStoreServer) mustEmbedUnimplementedStoreServer() {}
 
@@ -179,6 +215,32 @@ func (x *storeUpdateProductsServer) Recv() (*UpdateRequest, error) {
 	return m, nil
 }
 
+func _Store_ThrowProducts_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(StoreServer).ThrowProducts(&storeThrowProductsServer{stream})
+}
+
+type Store_ThrowProductsServer interface {
+	Send(*Order) error
+	Recv() (*UpdateRequest, error)
+	grpc.ServerStream
+}
+
+type storeThrowProductsServer struct {
+	grpc.ServerStream
+}
+
+func (x *storeThrowProductsServer) Send(m *Order) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *storeThrowProductsServer) Recv() (*UpdateRequest, error) {
+	m := new(UpdateRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // Store_ServiceDesc is the grpc.ServiceDesc for Store service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -195,6 +257,12 @@ var Store_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "UpdateProducts",
 			Handler:       _Store_UpdateProducts_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "ThrowProducts",
+			Handler:       _Store_ThrowProducts_Handler,
+			ServerStreams: true,
 			ClientStreams: true,
 		},
 	},
